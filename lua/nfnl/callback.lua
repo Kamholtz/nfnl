@@ -1,4 +1,4 @@
--- [nfnl] Compiled from fnl/nfnl/callback.fnl by https://github.com/Olical/nfnl, do not edit.
+-- [nfnl] Compiled from fnl\nfnl\callback.fnl by https://github.com/Olical/nfnl, do not edit.
 local _local_1_ = require("nfnl.module")
 local autoload = _local_1_["autoload"]
 local core = autoload("nfnl.core")
@@ -9,6 +9,7 @@ local compile = autoload("nfnl.compile")
 local config = autoload("nfnl.config")
 local api = autoload("nfnl.api")
 local notify = autoload("nfnl.notify")
+local aucmd_hack = autoload("nfnl.aucmd-hack")
 local function fennel_buf_write_post_callback_fn(root_dir, cfg)
   local function _2_(ev)
     return compile["into-file"]({["root-dir"] = root_dir, cfg = cfg, path = fs["full-path"](ev.file), source = nvim["get-buf-content-as-string"](ev.buf)})
@@ -38,7 +39,7 @@ local function fennel_filetype_callback(ev)
         notify.info("Found nfnl config, setting up autocmds: ", root_dir)
       else
       end
-      vim.api.nvim_create_autocmd({"BufWritePost"}, {group = vim.api.nvim_create_augroup(str.join({"nfnl-on-write", root_dir, ev.buf}), {}), buffer = ev.buf, callback = fennel_buf_write_post_callback_fn(root_dir, cfg)})
+      aucmd_hack["create-buf-write-post-autocmd"](root_dir, ev, cfg, fennel_buf_write_post_callback_fn, (vim.fn.has("windows") == 1))
       local function _7_(_241)
         return api.dofile(core.first(core.get(_241, "fargs")))
       end

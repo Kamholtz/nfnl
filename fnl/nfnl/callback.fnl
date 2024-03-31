@@ -7,6 +7,7 @@
 (local config (autoload :nfnl.config))
 (local api (autoload :nfnl.api))
 (local notify (autoload :nfnl.notify))
+(local aucmd-hack (autoload :nfnl.aucmd-hack))
 
 (fn fennel-buf-write-post-callback-fn [root-dir cfg]
   "Builds a function to be called on buf write. Adheres to the config passed
@@ -22,7 +23,6 @@
        : cfg
        :path (fs.full-path (. ev :file))
        :source (nvim.get-buf-content-as-string (. ev :buf))})))
-
 (fn supported-path? [file-path]
   "Returns true if we can work with the given path. Right now we support a path if it's a string and it doesn't start with a protocol segment like fugitive://..."
   (or
@@ -47,11 +47,11 @@
           (when (cfg [:verbose])
             (notify.info "Found nfnl config, setting up autocmds: " root-dir))
 
-          (vim.api.nvim_create_autocmd
-            ["BufWritePost"]
-            {:group (vim.api.nvim_create_augroup (str.join ["nfnl-on-write" root-dir ev.buf]) {})
-             :buffer ev.buf
-             :callback (fennel-buf-write-post-callback-fn root-dir cfg)})
+          (aucmd-hack.create-buf-write-post-autocmd root-dir 
+                                                    ev 
+                                                    cfg  
+                                                    fennel-buf-write-post-callback-fn 
+                                                    (= (vim.fn.has "windows") 1))
 
           (vim.api.nvim_buf_create_user_command
             ev.buf :NfnlFile
